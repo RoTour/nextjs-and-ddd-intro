@@ -1,7 +1,14 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Pixel from "./Pixel";
 import ColorPicker from "./ColorPicker";
+import { useWebSocket } from "./context/WebSocketContext";
 
 type Grid = string[][];
 
@@ -27,7 +34,7 @@ const PixelArtCanvas = () => {
     "lightgray",
   ];
   const [currentColor, setCurrentColor] = useState<string>(colors[0]);
-
+  const { sendMessage } = useWebSocket();
   // changes in ref are NOT tracked, so the handleClick callback is not
   // recreated when color is changed.
   const colorRef = useRef(currentColor);
@@ -35,13 +42,18 @@ const PixelArtCanvas = () => {
     colorRef.current = currentColor;
   }, [currentColor]);
 
-  const handleClick = useCallback((rowIndex: number, colIndex: number) => {
-    setGrid((previousGrid) => {
-      const newGrid = previousGrid.map((row) => [...row]);
-      newGrid[rowIndex][colIndex] = colorRef.current;
-      return newGrid;
-    });
-  }, []);
+  const handleClick = useCallback(
+    (rowIndex: number, colIndex: number) => {
+      setGrid((previousGrid) => {
+        const newGrid = previousGrid.map((row) => [...row]);
+        const color = colorRef.current;
+        newGrid[rowIndex][colIndex] = color;
+        sendMessage(`Item at [${rowIndex}:${colIndex}] => ${color}`);
+        return newGrid;
+      });
+    },
+    [sendMessage],
+  );
 
   return (
     <div className="flex flex-col items-center">

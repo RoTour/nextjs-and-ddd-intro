@@ -1,39 +1,68 @@
 "use client";
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import Pixel from "./Pixel";
+import {
+  changePixelColorAction,
+  getCurrentGridOrCreateNewOne,
+} from "@/app/actions.adapter";
+import { availableColors } from "@/domain/Cell.entity";
+import { PlayerId } from "@/domain/PlayerId.valueObject";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker";
 import { useWebSocket } from "./context/WebSocketContext";
+import Pixel from "./Pixel";
 
-type Grid = string[][];
+type GameData = {
+  gridId: string;
+  grid: string[][];
+};
 
 const PixelArtCanvas = () => {
-  const WIDTH = 32;
-  const HEIGHT = 32;
-  const INITIAL_COLOR = "lightgray";
-  const createInitialGrid = () => {
-    return Array.from({ length: HEIGHT }, () => {
-      return Array(WIDTH).fill(INITIAL_COLOR);
-    });
-  };
+  const [grid, setGrid] = useState<GameData | null>(null);
+  const gridRef = useRef(grid);
+  useEffect(() => {
+    gridRef.current = grid;
+  }, [grid]);
 
-  const [grid, setGrid] = useState<Grid>(createInitialGrid());
-  const colors = [
-    "red",
-    "green",
-    "blue",
-    "orange",
-    "purple",
-    "black",
-    "white",
-    "lightgray",
-  ];
-  const [currentColor, setCurrentColor] = useState<string>(colors[0]);
+  const [currentPlayerId] = useState(() => new PlayerId().id());
+  useEffect(() => {
+    const fetchGrid = async () => {
+      const result = await getCurrentGridOrCreateNewOne();
+
+      if (result.error) {
+        console.error(result.error);
+        return;
+      } else if (result.grid) {
+        setGrid(result.grid);
+      }
+    };
+
+    fetchGrid();
+  }, []);
+
+  const changeCellColor = useCallback(
+    async (
+      rowIndex: number,
+      colIndex: number,
+      color: string,
+      gridId: string,
+    ) => {
+      console.log(rowIndex, colIndex, color, gridId, currentPlayerId);
+      const result = await changePixelColorAction(
+        rowIndex,
+        colIndex,
+        color,
+        gridId,
+        currentPlayerId,
+      );
+
+      if (result.error) {
+        throw result.error;
+      }
+      console.log("Pixel color changed successfully", result);
+    },
+    [currentPlayerId],
+  );
+
+  const [currentColor, setCurrentColor] = useState<string>(availableColors[0]);
   const { sendMessage } = useWebSocket();
   // changes in ref are NOT tracked, so the handleClick callback is not
   // recreated when color is changed.
@@ -44,29 +73,60 @@ const PixelArtCanvas = () => {
 
   const handleClick = useCallback(
     (rowIndex: number, colIndex: number) => {
+      const currentGrid = gridRef.current;
+      if (!currentGrid) return;
+
+      const oldColor = currentGrid.grid[rowIndex][colIndex];
+      const newColor = colorRef.current;
+
+      //Optimistic UI update
       setGrid((previousGrid) => {
-        const newGrid = previousGrid.map((row) => [...row]);
-        const color = colorRef.current;
-        newGrid[rowIndex][colIndex] = color;
-        sendMessage(`Item at [${rowIndex}:${colIndex}] => ${color}`);
-        return newGrid;
+        if (!previousGrid) return previousGrid;
+        const newGrid = previousGrid.grid.map((row) => [...row]);
+        newGrid[rowIndex][colIndex] = newColor;
+        sendMessage(`Item at [${rowIndex}:${colIndex}] => ${newColor}`);
+        return {
+          ...previousGrid,
+          grid: newGrid,
+        };
+      });
+
+      changeCellColor(
+        rowIndex,
+        colIndex,
+        colorRef.current,
+        currentGrid.gridId,
+      ).catch(() => {
+        console.debug("Error caught on changeCellColor");
+        // reverse optimistic update
+        setGrid((previousGrid) => {
+          if (!previousGrid) return previousGrid;
+          const newGrid = previousGrid.grid.map((row) => [...row]);
+          newGrid[rowIndex][colIndex] = oldColor;
+          return {
+            ...previousGrid,
+            grid: newGrid,
+          };
+        });
       });
     },
-    [sendMessage],
+    [changeCellColor, sendMessage],
   );
 
   return (
     <div className="flex flex-col items-center">
       <ColorPicker
         colorChanged={setCurrentColor}
-        colorsAvailable={colors}
+        colorsAvailable={[...availableColors]}
         currentColor={currentColor}
       ></ColorPicker>
       <div
         className={`grid`}
-        style={{ gridTemplateColumns: `repeat(${WIDTH}, 20px)` }}
+        style={{
+          gridTemplateColumns: `repeat(${grid?.grid.length ?? 0}, 20px)`,
+        }}
       >
-        {grid.map((row, rowIndex) =>
+        {grid?.grid?.map((row, rowIndex) =>
           row.map((color, colIndex) => (
             <Pixel
               key={`${rowIndex}-${colIndex}`}

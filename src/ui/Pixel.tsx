@@ -9,7 +9,7 @@ type Props = {
 };
 
 const Pixel = ({ color, onClick, rowIndex, colIndex }: Props) => {
-  console.count(`Rendering pixel: ${color}`);
+  // console.count(`Rendering pixel: ${color}`);
   const handleClick = () => {
     onClick(rowIndex, colIndex);
   };
@@ -22,4 +22,26 @@ const Pixel = ({ color, onClick, rowIndex, colIndex }: Props) => {
   );
 };
 
-export default memo(Pixel);
+const areEqual = (prevProps: Readonly<Props>, nextProps: Readonly<Props>) => {
+  // This function should return TRUE if the props are equal, and FALSE if they are not.
+  // Returning false will trigger a re-render.
+
+  const propsAreEqual =
+    prevProps.color === nextProps.color &&
+    prevProps.onClick === nextProps.onClick;
+
+  if (!propsAreEqual) {
+    console.log(
+      `Pixel [${nextProps.rowIndex}, ${nextProps.colIndex}] is re-rendering because:`,
+      {
+        colorChanged: prevProps.color !== nextProps.color,
+        onClickChanged: prevProps.onClick !== nextProps.onClick,
+      },
+    );
+  }
+
+  return propsAreEqual;
+};
+
+// Pass our custom comparison function as the second argument to memo.
+export default memo(Pixel, areEqual);

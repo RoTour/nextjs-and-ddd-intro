@@ -1,4 +1,4 @@
-import { EntityId } from "./interfaces/EntityId";
+import { EntityId } from "./common/interfaces/EntityId";
 
 export class PlayerId extends EntityId {
   protected generateId(): string {

@@ -1,3 +1,5 @@
+"use client";
+
 type Props = {
   colorsAvailable: string[];
   colorChanged: (newColor: string) => void;

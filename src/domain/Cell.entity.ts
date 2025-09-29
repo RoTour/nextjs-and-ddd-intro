@@ -1,6 +1,7 @@
 import { Position } from "./Position.valueObject";
 
-const availableColors = [
+export const availableColors = [
+  "lightgray",
   "red",
   "green",
   "blue",
@@ -8,7 +9,6 @@ const availableColors = [
   "purple",
   "black",
   "white",
-  "lightgray",
 ] as const;
 export type Color = (typeof availableColors)[number];
 export const ColorDefault = availableColors[0];

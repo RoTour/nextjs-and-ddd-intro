@@ -1,6 +1,14 @@
+// /Users/rotour/projects/back-to-react/src/ui/context/WebSocketContext.tsx
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 interface WebSocketContextType {
   socket: WebSocket | null;
@@ -19,7 +27,6 @@ export const WebSocketProvider = ({
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    fetch("/api/socket");
     const ws = new WebSocket(`ws://localhost:3001`);
 
     ws.onopen = () => {
@@ -41,14 +48,25 @@ export const WebSocketProvider = ({
     };
   }, []);
 
-  const sendMessage = (message: string) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(message);
-    }
-  };
+  const sendMessage = useCallback(
+    (message: string) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(message);
+      }
+    },
+    [socket],
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      socket,
+      sendMessage,
+    }),
+    [socket, sendMessage],
+  );
 
   return (
-    <WebSocketContext.Provider value={{ socket, sendMessage }}>
+    <WebSocketContext.Provider value={contextValue}>
       {children}
     </WebSocketContext.Provider>
   );

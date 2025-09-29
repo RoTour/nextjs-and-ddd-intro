@@ -5,6 +5,7 @@ import { AggregateRoot } from "./common/interfaces/AggregateRoot";
 import { PlayerOnCooldownError } from "./errors/PlayerOnCooldownError";
 import { GridId } from "./GridId.valueObject";
 import { PlayerId } from "./PlayerId.valueObject";
+import { Position } from "./Position.valueObject";
 
 const defaultWidth = 32;
 const defaultHeight = 32;
@@ -16,8 +17,8 @@ export class Grid extends AggregateRoot<GridId> {
 
   private playerLastEdits: Map<string, Date>;
 
-  private constructor(cells: Cell[][]) {
-    super(new GridId());
+  private constructor(id: GridId, cells: Cell[][]) {
+    super(id);
     this.cells = cells;
     this.playerLastEdits = new Map();
   }
@@ -32,7 +33,7 @@ export class Grid extends AggregateRoot<GridId> {
       );
     }
     const cells = this.createInitialGrid(width, height);
-    return new Grid(cells);
+    return new Grid(new GridId(), cells);
   };
 
   private static createInitialGrid = (
@@ -44,7 +45,7 @@ export class Grid extends AggregateRoot<GridId> {
     for (let h = 0; h < height; h++) {
       newGrid.push([]);
       for (let w = 0; w < width; w++) {
-        newGrid[h].push(new Cell(w, h, defaultColor));
+        newGrid[h].push(new Cell(new Position(w, h), defaultColor));
       }
     }
 
@@ -83,7 +84,6 @@ export class Grid extends AggregateRoot<GridId> {
 
     this.playerLastEdits.set(playerId.id(), new Date());
 
-    // (Future) Add a domain event
     DomainEventPublisher.publish(
       new CellColorChanged(this.id, playerId, x, y, newColor),
     );

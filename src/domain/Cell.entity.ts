@@ -17,8 +17,8 @@ export class Cell {
   public readonly position: Position;
   private color: Color;
 
-  constructor(x: number, y: number, color: Color) {
-    this.position = new Position(x, y);
+  constructor(position: Position, color: Color) {
+    this.position = position;
     this.color = color;
   }
 

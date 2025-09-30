@@ -11,7 +11,9 @@
     "test:unit": "vitest"
   },
   "dependencies": {
+    "@prisma/client": "6.10.1",
     "next": "15.5.4",
+    "prisma": "^6.16.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "ws": "^8.18.3",
@@ -20,17 +22,22 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testcontainers/postgresql": "^11.7.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^20",
+    "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/ui": "3.2.4",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "jsdom": "^27.0.0",
+    "pg": "^8.16.3",
     "tailwindcss": "^4",
+    "testcontainers": "^11.7.0",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"

@@ -17,10 +17,14 @@ export class Grid extends AggregateRoot<GridId> {
 
   private playerLastEdits: Map<string, Date>;
 
-  private constructor(id: GridId, cells: Cell[][]) {
+  private constructor(
+    id: GridId,
+    cells: Cell[][],
+    playerLastEdits?: Map<string, Date>,
+  ) {
     super(id);
     this.cells = cells;
-    this.playerLastEdits = new Map();
+    this.playerLastEdits = playerLastEdits ?? new Map();
   }
 
   static withDimensions = (width = defaultWidth, height = defaultHeight) => {
@@ -104,5 +108,42 @@ export class Grid extends AggregateRoot<GridId> {
         throw new PlayerOnCooldownError(cooldownRemaining);
       }
     }
+  }
+
+  /**
+   * [NEW] A static factory to reconstitute a Grid from persisted data.
+   */
+  public static reconstitute(
+    id: GridId,
+    cells: Cell[][],
+    playerLastEdits: Map<string, Date>,
+  ): Grid {
+    return new Grid(id, cells, playerLastEdits);
+  }
+
+  /**
+   * [NEW] A method to convert the entity's state to a plain, storable object.
+   */
+  public toPrimitives() {
+    const cellPrimitives = this.cells.map((row) =>
+      row.map((cell) => ({
+        x: cell.position.x,
+        y: cell.position.y,
+        color: cell.currentColor(),
+      })),
+    );
+
+    const playerLastEditsPrimitives = Object.fromEntries(
+      Array.from(this.playerLastEdits.entries()).map(([key, value]) => [
+        key,
+        value.toISOString(),
+      ]),
+    );
+
+    return {
+      id: this.id.id(),
+      cells: cellPrimitives,
+      playerLastEdits: playerLastEditsPrimitives,
+    };
   }
 }

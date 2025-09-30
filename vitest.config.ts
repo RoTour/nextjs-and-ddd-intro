@@ -4,7 +4,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
+  server: {
+    watch: {
+      ignored: ["**/generated/**", "**/.prisma/**"],
+    },
+  },
+
   test: {
+    exclude: ["**/node_modules/**", "**/dist/**", "**/generated/**"],
     // environment: "jsdom",
     projects: [
       {
@@ -23,6 +30,7 @@ export default defineConfig({
           environment: "node",
           include: ["src/**/*.int.{test,spec}.{js,ts}"],
           exclude: [],
+          setupFiles: ["./test/setupIntegration.ts"],
         },
       },
     ],

@@ -44,4 +44,4 @@ const areEqual = (prevProps: Readonly<Props>, nextProps: Readonly<Props>) => {
 };
 
 // Pass our custom comparison function as the second argument to memo.
-export default memo(Pixel, areEqual);
+export default memo(Pixel);

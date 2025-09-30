@@ -22,7 +22,19 @@ const PixelArtCanvas = () => {
     gridRef.current = grid;
   }, [grid]);
 
-  const [currentPlayerId] = useState(() => new PlayerId().id());
+  const [currentPlayerId, setCurrentPlayerId] = useState<PlayerId | null>();
+  useEffect(() => {
+    const existingUser = localStorage.getItem("playerId");
+    if (existingUser) {
+      setCurrentPlayerId(new PlayerId(existingUser));
+      return;
+    }
+    const newPlayerId = new PlayerId();
+    setCurrentPlayerId(newPlayerId);
+    localStorage.setItem("playerId", newPlayerId.toString());
+  }, []);
+
+  console.debug("Current Player ID: ", currentPlayerId?.id());
   useEffect(() => {
     const fetchGrid = async () => {
       const result = await getCurrentGridOrCreateNewOne();
@@ -45,13 +57,16 @@ const PixelArtCanvas = () => {
       color: string,
       gridId: string,
     ) => {
+      if (!currentPlayerId) {
+        throw new Error("No current player ID");
+      }
       console.log(rowIndex, colIndex, color, gridId, currentPlayerId);
       const result = await changePixelColorAction(
         rowIndex,
         colIndex,
         color,
         gridId,
-        currentPlayerId,
+        currentPlayerId.id(),
       );
 
       if (result.error) {

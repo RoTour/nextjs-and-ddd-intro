@@ -7,7 +7,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // using suppressHydrationWarning for avoiding extensions like Grammarly to interfere with hydration
+    <html lang="en" suppressHydrationWarning>
       <body>
         <WebSocketProvider>{children}</WebSocketProvider>
       </body>

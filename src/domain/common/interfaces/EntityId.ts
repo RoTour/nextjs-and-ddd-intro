@@ -37,4 +37,14 @@ export abstract class EntityId {
 
     return this.value === otherId.value;
   }
+
+  /**
+   * Returns the string representation of the EntityId.
+   * The returned string should be able to be used to recreate the EntityId object.
+   *
+   * @returns {string} The string representation of the EntityId.
+   */
+  public toString(): string {
+    return this.value;
+  }
 }

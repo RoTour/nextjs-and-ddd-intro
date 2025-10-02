@@ -98,4 +98,28 @@ describe("Domain:Grid Entity", () => {
       expect(testListener.callCount).toBe(1);
     });
   });
+
+  describe("Serialization", () => {
+    test("transforming to primitive then to object should recreate a copy", () => {
+      // Arrange
+      const grid = Grid.withDimensions(3, 3);
+      const playerId = player.id;
+      grid.changeCellColor(0, 2, "red", playerId);
+
+      // Act
+      const primitive = grid.toPrimitives();
+      const recreatedGrid = Grid.reconstitute(primitive);
+
+      // Assert
+      expect(recreatedGrid.gridWidth()).toBe(grid.gridWidth());
+      expect(recreatedGrid.gridHeight()).toBe(grid.gridHeight());
+      for (let y = 0; y < grid.gridHeight(); y++) {
+        for (let x = 0; x < grid.gridWidth(); x++) {
+          expect(recreatedGrid.cellAt(x, y).currentColor()).toBe(
+            grid.cellAt(x, y).currentColor(),
+          );
+        }
+      }
+    });
+  });
 });

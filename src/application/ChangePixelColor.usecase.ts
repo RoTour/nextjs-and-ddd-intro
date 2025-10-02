@@ -39,5 +39,6 @@ export class ChangePixelColorUseCase {
     grid.changeCellColor(x, y, color, playerId);
 
     await this.gridRepository.save(grid);
+    console.debug("grid saved after color change", grid.id);
   }
 }

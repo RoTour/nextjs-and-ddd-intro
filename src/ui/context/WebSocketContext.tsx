@@ -3,16 +3,19 @@
 
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import { EventEmitter } from "../lib/EventEmitter";
+
+type Callback = (data: unknown) => void;
 
 interface WebSocketContextType {
   socket: WebSocket | null;
-  sendMessage: (message: string) => void;
+  subscribe: (eventType: string, callback: Callback) => void;
+  unsubscribe: (eventType: string, callback: Callback) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(
@@ -25,6 +28,7 @@ export const WebSocketProvider = ({
   children: React.ReactNode;
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const eventEmitter = useMemo(() => new EventEmitter(), []);
 
   useEffect(() => {
     const ws = new WebSocket(`ws://localhost:3001`);
@@ -35,7 +39,14 @@ export const WebSocketProvider = ({
     };
 
     ws.onmessage = (event) => {
-      console.log("Message from server: ", event.data);
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type && message.payload) {
+          eventEmitter.emit(message.type, message.payload);
+        }
+      } catch (e) {
+        console.error("Failed to parse WebSocket message:", event.data, e);
+      }
     };
 
     ws.onclose = () => {
@@ -46,23 +57,15 @@ export const WebSocketProvider = ({
     return () => {
       ws.close();
     };
-  }, []);
-
-  const sendMessage = useCallback(
-    (message: string) => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(message);
-      }
-    },
-    [socket],
-  );
+  }, [eventEmitter]);
 
   const contextValue = useMemo(
     () => ({
       socket,
-      sendMessage,
+      subscribe: eventEmitter.on.bind(eventEmitter),
+      unsubscribe: eventEmitter.off.bind(eventEmitter),
     }),
-    [socket, sendMessage],
+    [socket, eventEmitter],
   );
 
   return (

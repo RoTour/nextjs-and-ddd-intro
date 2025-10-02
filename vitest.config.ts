@@ -11,7 +11,6 @@ export default defineConfig({
   },
 
   test: {
-    exclude: ["**/node_modules/**", "**/dist/**", "**/generated/**"],
     // environment: "jsdom",
     projects: [
       {

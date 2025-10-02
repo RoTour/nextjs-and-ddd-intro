@@ -113,12 +113,28 @@ export class Grid extends AggregateRoot<GridId> {
   /**
    * [NEW] A static factory to reconstitute a Grid from persisted data.
    */
-  public static reconstitute(
-    id: GridId,
-    cells: Cell[][],
-    playerLastEdits: Map<string, Date>,
-  ): Grid {
-    return new Grid(id, cells, playerLastEdits);
+  public static reconstitute(primitiveGrid: {
+    id: string;
+    cells: { x: number; y: number; color: Color }[][];
+    playerLastEdits: { [playerId: string]: string };
+  }): Grid {
+    const cells: Cell[][] = primitiveGrid.cells.map((row) =>
+      row.map(
+        (cellData) =>
+          new Cell(new Position(cellData.x, cellData.y), cellData.color),
+      ),
+    );
+
+    return new Grid(
+      new GridId(primitiveGrid.id),
+      cells,
+      new Map(
+        Object.entries(primitiveGrid.playerLastEdits).map(([key, value]) => [
+          key,
+          new Date(value),
+        ]),
+      ),
+    );
   }
 
   /**

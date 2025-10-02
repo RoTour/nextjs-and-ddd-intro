@@ -2,21 +2,56 @@
 import {
   changePixelColorAction,
   getCurrentGridOrCreateNewOne,
-} from "@/app/actions.adapter";
+} from "@/app/CanvasPageServerActions.adapter";
 import { availableColors } from "@/domain/Cell.entity";
 import { PlayerId } from "@/domain/PlayerId.valueObject";
+import { ClientEventGridUpdatedPayload } from "@/infrastructure/listeners/GridUpdateBroadcaster";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker";
-import { useWebSocket } from "./context/WebSocketContext";
+import { useSubscription } from "./hooks/useSubscription";
 import Pixel from "./Pixel";
 
 type GameData = {
   gridId: string;
-  grid: string[][];
+  cells: string[][];
+};
+
+const updateCellOfLocalGrid = (
+  cells: string[][],
+  x: number,
+  y: number,
+  color: string,
+): string[][] => {
+  const newCells = cells.map((row) => [...row]);
+  newCells[y][x] = color;
+  return newCells;
 };
 
 const PixelArtCanvas = () => {
   const [grid, setGrid] = useState<GameData | null>(null);
+  const [cooldown, setCooldown] = useState<number>(0);
+  useSubscription("GRID_UPDATED", (rawPayload) => {
+    const data = ClientEventGridUpdatedPayload.safeParse(rawPayload);
+    if (!data.success) {
+      console.error(
+        "Invalid GRID_UPDATED payload",
+        rawPayload,
+        data.error.issues,
+      );
+      return;
+    }
+    const { x, y, newColor, gridId } = data.data;
+    console.debug("Received GRID_UPDATED event", event);
+    setGrid((oldGameData) => {
+      if (!oldGameData) return oldGameData;
+      if (oldGameData.gridId !== gridId) return oldGameData;
+      const newCells = updateCellOfLocalGrid(oldGameData.cells, x, y, newColor);
+      return {
+        ...oldGameData,
+        cells: newCells,
+      };
+    });
+  });
   const gridRef = useRef(grid);
   useEffect(() => {
     gridRef.current = grid;
@@ -43,7 +78,10 @@ const PixelArtCanvas = () => {
         console.error(result.error);
         return;
       } else if (result.grid) {
-        setGrid(result.grid);
+        setGrid({
+          cells: result.grid.cells,
+          gridId: result.grid.gridId,
+        });
       }
     };
 
@@ -62,8 +100,8 @@ const PixelArtCanvas = () => {
       }
       console.log(rowIndex, colIndex, color, gridId, currentPlayerId);
       const result = await changePixelColorAction(
-        rowIndex,
         colIndex,
+        rowIndex,
         color,
         gridId,
         currentPlayerId.id(),
@@ -78,7 +116,6 @@ const PixelArtCanvas = () => {
   );
 
   const [currentColor, setCurrentColor] = useState<string>(availableColors[0]);
-  const { sendMessage } = useWebSocket();
   // changes in ref are NOT tracked, so the handleClick callback is not
   // recreated when color is changed.
   const colorRef = useRef(currentColor);
@@ -91,18 +128,20 @@ const PixelArtCanvas = () => {
       const currentGrid = gridRef.current;
       if (!currentGrid) return;
 
-      const oldColor = currentGrid.grid[rowIndex][colIndex];
+      const oldColor = currentGrid.cells[rowIndex][colIndex];
       const newColor = colorRef.current;
 
       //Optimistic UI update
       setGrid((previousGrid) => {
         if (!previousGrid) return previousGrid;
-        const newGrid = previousGrid.grid.map((row) => [...row]);
-        newGrid[rowIndex][colIndex] = newColor;
-        sendMessage(`Item at [${rowIndex}:${colIndex}] => ${newColor}`);
         return {
           ...previousGrid,
-          grid: newGrid,
+          cells: updateCellOfLocalGrid(
+            previousGrid.cells,
+            colIndex,
+            rowIndex,
+            newColor,
+          ),
         };
       });
 
@@ -116,16 +155,19 @@ const PixelArtCanvas = () => {
         // reverse optimistic update
         setGrid((previousGrid) => {
           if (!previousGrid) return previousGrid;
-          const newGrid = previousGrid.grid.map((row) => [...row]);
-          newGrid[rowIndex][colIndex] = oldColor;
           return {
             ...previousGrid,
-            grid: newGrid,
+            cells: updateCellOfLocalGrid(
+              previousGrid.cells,
+              colIndex,
+              rowIndex,
+              oldColor,
+            ),
           };
         });
       });
     },
-    [changeCellColor, sendMessage],
+    [changeCellColor],
   );
 
   return (
@@ -138,10 +180,10 @@ const PixelArtCanvas = () => {
       <div
         className={`grid`}
         style={{
-          gridTemplateColumns: `repeat(${grid?.grid.length ?? 0}, 20px)`,
+          gridTemplateColumns: `repeat(${grid?.cells?.length ?? 0}, 20px)`,
         }}
       >
-        {grid?.grid?.map((row, rowIndex) =>
+        {grid?.cells?.map((row, rowIndex) =>
           row.map((color, colIndex) => (
             <Pixel
               key={`${rowIndex}-${colIndex}`}

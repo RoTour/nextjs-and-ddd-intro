@@ -1,10 +1,9 @@
-import { Cell, Color } from "@/domain/Cell.entity";
 import { Grid } from "@/domain/Grid.entity";
 import { GridId } from "@/domain/GridId.valueObject";
 import { IGridRepository } from "@/domain/interfaces/IGridRepository";
-import { Position } from "@/domain/Position.valueObject";
-import { PrismaClient, Grid as PrismaGrid } from "../../generated/prisma";
-import { JsonArray } from "../../generated/prisma/runtime/library";
+import { PrismaClient, Grid as PrismaGrid } from "../../../generated/prisma";
+import { JsonArray } from "../../../generated/prisma/runtime/library";
+import { Color } from "@/domain/Cell.entity";
 
 type GridCellsData = { x: number; y: number; color: string }[][];
 export class PrismaGridMapper {
@@ -20,12 +19,11 @@ export class PrismaGridMapper {
 
   static fromPrismaToDomain(grid: PrismaGrid): Grid {
     const cellsData = grid.cells as GridCellsData;
-    const cells = cellsData.map((row) => {
-      return row.map(
-        ({ x, y, color }) => new Cell(new Position(x, y), color as Color),
-      );
+    return Grid.reconstitute({
+      id: grid.id,
+      cells: cellsData as { x: number; y: number; color: Color }[][],
+      playerLastEdits: {}, // Assuming no player edits are stored in PrismaGrid
     });
-    return Grid.reconstitute(new GridId(grid.id), cells, new Map());
   }
 }
 

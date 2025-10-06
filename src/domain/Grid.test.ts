@@ -54,6 +54,15 @@ describe("Domain:Grid Entity", () => {
     expect(grid.cellAt(1, 2).currentColor()).toBe("black");
   });
 
+  test("Changing color should be blocked if player is on cd", () => {
+    const grid = Grid.withDimensions(5, 5);
+    grid.changeCellColor(1, 2, "black", player.id);
+
+    expect(() => {
+      grid.changeCellColor(2, 2, "red", player.id);
+    }).toThrow(PlayerOnCooldownError);
+  });
+
   describe("Domain Events Publishing", () => {
     test("should notify a subscribed listener when a cell color is changed", () => {
       // Arrange

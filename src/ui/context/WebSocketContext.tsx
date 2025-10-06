@@ -1,5 +1,5 @@
-// /Users/rotour/projects/back-to-react/src/ui/context/WebSocketContext.tsx
 "use client";
+import { useRuntimeConfig } from "./RuntimeConfigContext";
 
 import React, {
   createContext,
@@ -29,9 +29,10 @@ export const WebSocketProvider = ({
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const eventEmitter = useMemo(() => new EventEmitter(), []);
+  const { WEBSOCKET_URL } = useRuntimeConfig();
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://localhost:3001`);
+    const ws = new WebSocket(WEBSOCKET_URL);
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
@@ -57,7 +58,7 @@ export const WebSocketProvider = ({
     return () => {
       ws.close();
     };
-  }, [eventEmitter]);
+  }, [eventEmitter, WEBSOCKET_URL]);
 
   const contextValue = useMemo(
     () => ({

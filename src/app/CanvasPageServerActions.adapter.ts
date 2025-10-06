@@ -36,7 +36,10 @@ export async function changePixelColorAction(
 }
 
 export async function getCurrentGridOrCreateNewOne() {
-  const usecase = new GetCurrentGridOrCreateNewOneUseCase(gridRepository, gridQueries);
+  const usecase = new GetCurrentGridOrCreateNewOneUseCase(
+    gridRepository,
+    gridQueries,
+  );
   try {
     const grid = await usecase.execute();
     // const gameData: {
@@ -68,6 +71,8 @@ export async function getCanvasPageData() {
     };
   } catch (error) {
     console.error("Error getting canvas page data:", error);
-    return { error: (error as Error).message
+    return {
+      error: (error as Error).message,
+    };
   }
 }

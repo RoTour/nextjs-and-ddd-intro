@@ -2,7 +2,10 @@ import { Grid } from "@/domain/Grid.entity";
 import { GridId } from "@/domain/GridId.valueObject";
 import { IGridRepository } from "@/domain/interfaces/IGridRepository";
 import { PrismaClient, Grid as PrismaGrid } from "../../../generated/prisma";
-import { JsonArray } from "../../../generated/prisma/runtime/library";
+import {
+  JsonArray,
+  JsonObject,
+} from "../../../generated/prisma/runtime/library";
 import { Color } from "@/domain/Cell.entity";
 
 type GridCellsData = { x: number; y: number; color: string }[][];
@@ -12,6 +15,7 @@ export class PrismaGridMapper {
     return {
       id: primitiveGrid.id,
       cells: primitiveGrid.cells as JsonArray,
+      playerLastEdits: primitiveGrid.playerLastEdits as unknown as JsonObject,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -22,7 +26,7 @@ export class PrismaGridMapper {
     return Grid.reconstitute({
       id: grid.id,
       cells: cellsData as { x: number; y: number; color: Color }[][],
-      playerLastEdits: {}, // Assuming no player edits are stored in PrismaGrid
+      playerLastEdits: grid.playerLastEdits as { [playerId: string]: string },
     });
   }
 }
@@ -49,10 +53,12 @@ export class PrismaGridRepository implements IGridRepository {
       where: { id: grid.id.id() },
       update: {
         cells: prismaData.cells as JsonArray,
+        playerLastEdits: prismaData.playerLastEdits as unknown as JsonObject,
       },
       create: {
         id: grid.id.id(),
         cells: prismaData.cells as JsonArray,
+        playerLastEdits: prismaData.playerLastEdits as unknown as JsonObject,
       },
     });
   }

@@ -1,8 +1,10 @@
 "use client";
 
+import { Color } from "@/domain/Cell.entity";
+
 type Props = {
-  colorsAvailable: string[];
-  colorChanged: (newColor: string) => void;
+  colorsAvailable: Color[];
+  colorChanged: (newColor: Color) => void;
   currentColor: string;
 };
 

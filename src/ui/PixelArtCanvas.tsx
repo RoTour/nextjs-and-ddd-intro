@@ -3,7 +3,7 @@ import {
   changePixelColorAction,
   getCurrentGridOrCreateNewOne,
 } from "@/app/CanvasPageServerActions.adapter";
-import { availableColors } from "@/domain/Cell.entity";
+import { availableColors, Color } from "@/domain/Cell.entity";
 import { PlayerId } from "@/domain/PlayerId.valueObject";
 import { ClientEventGridUpdatedPayload } from "@/infrastructure/listeners/GridUpdateBroadcaster";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,7 +29,7 @@ const updateCellOfLocalGrid = (
 
 const PixelArtCanvas = () => {
   const [grid, setGrid] = useState<GameData | null>(null);
-  const [cooldown, setCooldown] = useState<number>(0);
+  // const [cooldown, setCooldown] = useState<number>(0);
   useSubscription("GRID_UPDATED", (rawPayload) => {
     const data = ClientEventGridUpdatedPayload.safeParse(rawPayload);
     if (!data.success) {
@@ -92,7 +92,7 @@ const PixelArtCanvas = () => {
     async (
       rowIndex: number,
       colIndex: number,
-      color: string,
+      color: Color,
       gridId: string,
     ) => {
       if (!currentPlayerId) {
@@ -115,7 +115,7 @@ const PixelArtCanvas = () => {
     [currentPlayerId],
   );
 
-  const [currentColor, setCurrentColor] = useState<string>(availableColors[0]);
+  const [currentColor, setCurrentColor] = useState<Color>(availableColors[0]);
   // changes in ref are NOT tracked, so the handleClick callback is not
   // recreated when color is changed.
   const colorRef = useRef(currentColor);

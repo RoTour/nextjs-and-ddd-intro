@@ -23,7 +23,8 @@ model Player {
 model Grid {
   id String @id
 
-  cells     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  cells           Json
+  playerLastEdits Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

@@ -1,0 +1,12 @@
+.env*
+Dockerfile*
+docker-compose.yml
+node_modules
+dist
+generated
+build
+.vscode
+.idea
+*.log
+*.tsbuildinfo
+docs

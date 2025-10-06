@@ -1,4 +1,22 @@
 services:
+  app:
+    container_name: backtoreact_app
+    image: rotour/pixelwar-demo:latest
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - WEBSOCKET_URL=${WEBSOCKET_URL}
+    platform: linux/amd64
+    # platform: linux/arm64
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - db
   db:
     container_name: backtoreact_db
     restart: always

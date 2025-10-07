@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "dev:ws": "bun run src/infrastructure/WebSocketServer.ts",
+    "dev:ws": "bun run socket-server.ts",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",

@@ -1,5 +1,6 @@
 .env*
 Dockerfile*
+Dockerfile.ws
 docker-compose.yml
 node_modules
 dist
@@ -10,3 +11,4 @@ build
 *.log
 *.tsbuildinfo
 docs
+tmp

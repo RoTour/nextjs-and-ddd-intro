@@ -8,15 +8,14 @@ services:
       dockerfile: Dockerfile
       args:
         - WEBSOCKET_URL=${WEBSOCKET_URL}
-
-    platform: linux/amd64
+    platform: linux/arm64
     env_file:
-      - .env.production
+      - .env
     ports:
       - "3000:3000"
+
     depends_on:
       - db
-
   ws:
     container_name: backtoreact_ws
     image: rotour/pixelwar-ws:latest
@@ -24,19 +23,26 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ws
-    platform: linux/amd64
+    # platform: linux/amd64
+    platform: linux/arm64
     env_file:
-      - .env.production
+      - .env
+    ports:
+      - "8080:8080"
+
     depends_on:
       - db
 
   db:
     container_name: backtoreact_db
     restart: always
-    image: "postgres:18"
+    image: postgres:18
     env_file:
       - .env
+    ports:
+      - "5333:5432"
     volumes:
       - back-to-react-db:/var/lib/postgresql/data
+
 volumes:
-  back-to-react-db: null
+  back-to-react-db:

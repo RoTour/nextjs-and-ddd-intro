@@ -5,16 +5,21 @@ import { GetCurrentGridOrCreateNewOneUseCase } from "@/application/GetCurrentGri
 import { CanvasPageQueries } from "@/application/queries/CanvasPageQueries";
 import { Color } from "@/domain/Cell.entity";
 import { DomainEventPublisher } from "@/domain/common/events/DomainEventPublisher";
+import { HttpBroadcaster } from "@/infrastructure/broadcasting/HttpBroadcaster";
 import { GridUpdateBroadcaster } from "@/infrastructure/listeners/GridUpdateBroadcaster";
 import { prisma } from "@/infrastructure/prisma";
 import { PrismaGridQueries } from "@/infrastructure/queries/PrismaGridQueries";
 import { PrismaGridRepository } from "@/infrastructure/repositories/PrismaGridRepository";
-import { broadcast } from "@/infrastructure/WebSocketServer";
 import { revalidatePath } from "next/cache";
 
 const gridRepository = new PrismaGridRepository(prisma);
 const gridQueries = new PrismaGridQueries(prisma);
-DomainEventPublisher.subscribe(new GridUpdateBroadcaster(broadcast));
+
+// Setup the event-driven broadcasting.
+// When a use case publishes a domain event, this listener will be triggered.
+const broadcaster = new HttpBroadcaster();
+const gridUpdateListener = new GridUpdateBroadcaster(broadcaster);
+DomainEventPublisher.subscribe(gridUpdateListener);
 
 export async function changePixelColorAction(
   x: number,

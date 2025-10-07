@@ -33,7 +33,6 @@ const RegisterPage = () => {
         </div>
       )}
 
-      <div>Is pending: {pending}</div>
       <form action={action}>
         <input type="email" name="userEmail" placeholder="Username" />
         <input type="password" name="userPassword" placeholder="Password" />

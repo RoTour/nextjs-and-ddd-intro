@@ -2,6 +2,8 @@ import { CellColorChanged } from "@/domain/CellColorChanged.event";
 import { IDomainEvent } from "@/domain/common/interfaces/IDomainEvent";
 import { IDomainEventListener } from "@/domain/common/interfaces/IDomainEventListener";
 import z from "zod";
+import { IBroadcaster } from "../broadcasting/IBroadcaster";
+// debut
 
 export const ClientEventGridUpdatedPayload = z.object({
   gridId: z.string(),
@@ -12,10 +14,9 @@ export const ClientEventGridUpdatedPayload = z.object({
 });
 
 export class GridUpdateBroadcaster implements IDomainEventListener {
-  constructor(
-    private readonly broadcaster: (stringifiedPayload: string) => void,
-  ) {}
-  handle(event: IDomainEvent): void {
+  constructor(private readonly broadcaster: IBroadcaster) {}
+
+  async handle(event: IDomainEvent): Promise<void> {
     console.debug("GridUpdateBroadcaster: Event received");
     if (!(event instanceof CellColorChanged)) return;
     console.log("GridUpdateBroadcaster: Handling CellColorChanged event...");
@@ -31,6 +32,6 @@ export class GridUpdateBroadcaster implements IDomainEventListener {
       },
     };
 
-    this.broadcaster(JSON.stringify(messageToBroadcast));
+    await this.broadcaster.broadcast(JSON.stringify(messageToBroadcast));
   }
 }

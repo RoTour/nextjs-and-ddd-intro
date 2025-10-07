@@ -3,9 +3,9 @@ import {
   changePixelColorAction,
   getCurrentGridOrCreateNewOne,
 } from "@/app/CanvasPageServerActions.adapter";
-import { availableColors, Color } from "@/domain/Cell.entity";
-import { PlayerId } from "@/domain/PlayerId.valueObject";
-import { ClientEventGridUpdatedPayload } from "@/infrastructure/listeners/GridUpdateBroadcaster";
+import { availableColors, Color } from "@/pixelwar-context/domain/Cell.entity";
+import { PlayerId } from "@/pixelwar-context/domain/PlayerId.valueObject";
+import { ClientEventGridUpdatedPayload } from "@/pixelwar-context/infrastructure/listeners/GridUpdateBroadcaster";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ColorPicker from "./ColorPicker";
 import { useSubscription } from "./hooks/useSubscription";

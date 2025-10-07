@@ -1,6 +1,7 @@
 import { WebSocketProvider } from "@/ui/context/WebSocketContext";
 import "./globals.css";
 import { RuntimeConfigProvider } from "@/ui/context/RuntimeConfigContext";
+import Navbar from "@/ui/layout/Navbar";
 
 export default function RootLayout({
   children,
@@ -18,6 +19,7 @@ export default function RootLayout({
     // using suppressHydrationWarning for avoiding extensions like Grammarly to interfere with hydration
     <html lang="en" suppressHydrationWarning>
       <body>
+        <Navbar />
         <RuntimeConfigProvider
           value={{
             WEBSOCKET_URL: websocketUrl,

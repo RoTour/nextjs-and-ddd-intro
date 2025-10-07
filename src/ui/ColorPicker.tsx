@@ -1,6 +1,6 @@
 "use client";
 
-import { Color } from "@/domain/Cell.entity";
+import { Color } from "@/pixelwar-context/domain/Cell.entity";
 
 type Props = {
   colorsAvailable: Color[];

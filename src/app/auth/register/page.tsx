@@ -1,44 +1,65 @@
 "use client";
+
+import { useActionState } from "react";
 import {
   AuthServerActionRegister,
-  type RegisterSchema,
+  FormState,
 } from "../AuthServerActions.adapter";
-import { useActionState } from "react";
+import Link from "next/link";
 
 const RegisterPage = () => {
-  const [state, action] = useActionState(AuthServerActionRegister, undefined);
-  return (
-    <>
-      <div>{state?.success}</div>
+  const [state, action] = useActionState<FormState, FormData>(
+    AuthServerActionRegister,
+    undefined,
+  );
 
-      {/* If errors */}
-      {state?.errors && (
-        <div className="flex flex-col gap-2">
-          {(["userEmail", "userPassword"] as (keyof RegisterSchema)[]).map(
-            (field) => (
-              <div key={field}>
-                {state.errors[field] && (
-                  <div>
-                    <p>{field}</p>
-                    <div className="text-red-500">
-                      {state.errors[field].map((error, index) => (
-                        <div key={index}>{error}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ),
+  return (
+    <div>
+      <form
+        action={action}
+        className="[&_input]:border-purple-300 [&_input]:border-2 [&_input]:rounded-md [&_input]:h-10 [&_input]:px-2 flex flex-col gap-2 px-16 py-8"
+      >
+        {state?.errors?.errors && state.errors.errors.length > 0 && (
+          <p className="text-red-500">{state.errors.errors.join(", ")}</p>
+        )}
+        <div className="flex flex-col">
+          <label htmlFor="userEmail">Email:</label>
+          <input type="email" id="userEmail" name="userEmail" required />
+          {state?.errors?.properties?.userEmail?.errors && (
+            <p className="text-red-500">
+              {state.errors.properties.userEmail.errors.join(", ")}
+            </p>
           )}
         </div>
-      )}
-
-      <form action={action}>
-        <input type="email" name="userEmail" placeholder="Username" />
-        <input type="password" name="userPassword" placeholder="Password" />
-        <button type="submit">Register</button>
+        <div className="flex flex-col">
+          <label htmlFor="userPassword">Password:</label>
+          <input
+            type="password"
+            id="userPassword"
+            name="userPassword"
+            required
+          />
+          {state?.errors?.properties?.userPassword?.errors && (
+            <p className="text-red-500">
+              {state.errors.properties.userPassword.errors.join(", ")}
+            </p>
+          )}
+        </div>
+        {state?.message && <p className="text-red-500">{state.message}</p>}
+        <button
+          type="submit"
+          className="mt-8 bg-purple-900 rounded-md px-8 py-2"
+        >
+          Register
+        </button>
+        <Link
+          href="/auth/login"
+          className="text-purple-700 underline text-center"
+        >
+          Already have an account? Login instead
+        </Link>
       </form>
-    </>
+    </div>
   );
 };
 

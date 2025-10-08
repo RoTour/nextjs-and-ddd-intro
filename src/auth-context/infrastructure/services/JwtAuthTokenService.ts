@@ -39,16 +39,16 @@ export class JwtAuthTokenService implements IAuthTokenService {
       const { payload } = await jwtVerify(token.value, encodedSecret);
       const validationResult = AuthPayloadSchema.safeParse(payload);
       if (!validationResult.success) {
-        console.error("Invalid token payload", validationResult.error);
+        // console.error("Invalid token payload", validationResult.error);
         return null;
       }
       return validationResult.data;
     } catch (error) {
       if (error instanceof Error) {
-        console.error("Token verification failed:", error.message);
+        // console.error("Token verification failed:", error.message);
         return null;
       }
-      console.error("Token verification failed for unknown reason");
+      // console.error("Token verification failed for unknown reason");
       return null;
     }
   }

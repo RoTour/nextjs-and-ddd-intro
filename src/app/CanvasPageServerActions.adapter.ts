@@ -1,15 +1,15 @@
 "use server";
 
-import { ChangePixelColorUseCase } from "@/application/ChangePixelColor.usecase";
-import { GetCurrentGridOrCreateNewOneUseCase } from "@/application/GetCurrentGridOrCreateNewOne.usecase";
-import { CanvasPageQueries } from "@/application/queries/CanvasPageQueries";
-import { Color } from "@/domain/Cell.entity";
-import { DomainEventPublisher } from "@/domain/common/events/DomainEventPublisher";
-import { HttpBroadcaster } from "@/infrastructure/broadcasting/HttpBroadcaster";
-import { GridUpdateBroadcaster } from "@/infrastructure/listeners/GridUpdateBroadcaster";
-import { prisma } from "@/infrastructure/prisma";
-import { PrismaGridQueries } from "@/infrastructure/queries/PrismaGridQueries";
-import { PrismaGridRepository } from "@/infrastructure/repositories/PrismaGridRepository";
+import { ChangePixelColorUseCase } from "@/pixelwar-context/application/ChangePixelColor.usecase";
+import { GetCurrentGridOrCreateNewOneUseCase } from "@/pixelwar-context/application/GetCurrentGridOrCreateNewOne.usecase";
+import { CanvasPageQueries } from "@/pixelwar-context/application/queries/CanvasPageQueries";
+import { Color } from "@/pixelwar-context/domain/Cell.entity";
+import { DomainEventPublisher } from "@/shared-kernel/events/DomainEventPublisher";
+import { HttpBroadcaster } from "@/pixelwar-context/infrastructure/broadcasting/HttpBroadcaster";
+import { GridUpdateBroadcaster } from "@/pixelwar-context/infrastructure/listeners/GridUpdateBroadcaster";
+import { prisma } from "@/shared-kernel/prisma";
+import { PrismaGridQueries } from "@/pixelwar-context/infrastructure/queries/PrismaGridQueries";
+import { PrismaGridRepository } from "@/pixelwar-context/infrastructure/repositories/PrismaGridRepository";
 import { revalidatePath } from "next/cache";
 
 const gridRepository = new PrismaGridRepository(prisma);

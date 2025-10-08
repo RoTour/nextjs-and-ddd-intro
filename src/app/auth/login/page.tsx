@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { AuthServerActionLogin } from "../AuthServerActions.adapter";
+import Link from "next/link";
 
 const LoginPage = () => {
   const [state, action] = useActionState(AuthServerActionLogin, undefined);
@@ -39,6 +40,12 @@ const LoginPage = () => {
         >
           Login
         </button>
+        <Link
+          href="/auth/register"
+          className="text-purple-700 underline text-center"
+        >
+          No account ? Register instead
+        </Link>
       </form>
     </div>
   );

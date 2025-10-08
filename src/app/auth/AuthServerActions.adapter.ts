@@ -12,6 +12,7 @@ import {
 } from "@/auth-context/application/LoginUser.usecase";
 import { InvalidCredentialsError } from "@/auth-context/application/errors/InvalidCredentialsError";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const registerSchema = z.object({
   userEmail: z.email(),
@@ -40,41 +41,60 @@ export const AuthServerActionRegister = async (
   state: FormState,
   formData: FormData,
 ) => {
-  const formUserEmail = formData.get("userEmail");
-  const formUserPassword = formData.get("userPassword");
-  const payload = {
-    userEmail: formUserEmail,
-    userPassword: formUserPassword,
-  };
+  // --- 1. Data Parsing and Validation ---
+  const parsedData = registerSchema.safeParse({
+    userEmail: formData.get("userEmail"),
+    userPassword: formData.get("userPassword"),
+  });
 
-  const parsedData = registerSchema.safeParse(payload);
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
   if (!parsedData.success) {
-    return { success: false, errors: z.treeifyError(parsedData.error) };
+    return { errors: z.treeifyError(parsedData.error) };
   }
 
   const command: RegisterUserCommand = {
-    clearPassword: parsedData.data.userPassword,
     email: parsedData.data.userEmail,
+    clearPassword: parsedData.data.userPassword,
   };
+
+  // --- 2. Use Case Execution and Error Handling ---
+  let newUser;
   try {
-    await registerUserUseCase.execute(command);
+    // The register use case returns the new user object
+    newUser = await registerUserUseCase.execute(command);
   } catch (error) {
-    let message = "Registration failed";
     if (error instanceof EmailAlreadyExistsError) {
-      message = `The email ${command.email} is already in use. Please use a different email.`;
+      return { message: "This email is already in use. Please try to login." };
     }
-    if (error instanceof Error) {
-      message = error.message;
-    }
-    return { success: false, message };
+    return { message: "An unexpected error occurred during registration." };
   }
 
-  return {
-    success: true,
-    message: "User registered successfully",
-  };
+  // --- 3. Success Case: Auto-Login and Redirect ---
+  // If we get here, registration was successful.
+  try {
+    // Use the services directly to create a token for the new user
+    const payload =
+      await ServiceProvider.authPayloadFactory.createPayload(newUser);
+    const token = await ServiceProvider.authTokenService.generateToken(
+      newUser.id,
+      payload,
+    );
+
+    // Set the cookie
+    (await cookies()).set("pixelwar_auth_token", token.value, {
+      httpOnly: true,
+      path: "/",
+    });
+  } catch (error) {
+    // This would only fail if token creation fails, which is unlikely.
+    // We can't redirect, so we'll show an error.
+    return {
+      message:
+        "Account created, but failed to log you in. Please try logging in manually.",
+    };
+  }
+
+  // Redirect to the homepage
+  redirect("/");
 };
 
 const loginUserUseCase = new LoginUserUseCase(
@@ -110,7 +130,7 @@ export const AuthServerActionLogin = async (
       name: "pixelwar_auth_token",
       value: result.token.value,
     });
-    return { success: true, message: "Login successful" };
+    redirect("/");
   } catch (error) {
     let message = "Login failed";
     if (error instanceof InvalidCredentialsError) {
@@ -121,4 +141,16 @@ export const AuthServerActionLogin = async (
     }
     return { success: false, message };
   }
+};
+
+// In src/app/auth/AuthServerActions.adapter.ts
+
+// ... (at the end of the file)
+
+export const logoutAction = async () => {
+  // Delete the cookie
+  (await cookies()).delete("pixelwar_auth_token");
+
+  // Redirect to the login page
+  redirect("/auth/login");
 };

@@ -11,7 +11,7 @@ const RegisterUserCommand = z.object({
     .min(6, { message: "Password should be at least 6 characters" }),
 });
 
-type RegisterUserCommand = z.infer<typeof RegisterUserCommand>;
+export type RegisterUserCommand = z.infer<typeof RegisterUserCommand>;
 
 export class RegisterUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}

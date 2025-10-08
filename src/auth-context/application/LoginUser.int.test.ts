@@ -1,19 +1,18 @@
 // src/auth-context/application/LoginUser.int.test.ts
 
-import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { getPrismaTestClient } from "@/../test/setupIntegration";
+import { beforeEach, describe, expect, test } from "vitest";
 import { PrismaClient } from "../../../generated/prisma";
 
 // Import all real implementations
+import { AuthToken } from "../domain/AuthToken.valueObject";
+import { User } from "../domain/User.entity";
+import { AuthPayloadFactory } from "../domain/services/AuthPayloadFactory";
 import { PrismaUserRepository } from "../infrastructure/repositories/PrismaUserRepository";
 import { JwtAuthTokenService } from "../infrastructure/services/JwtAuthTokenService";
-import { AuthPayloadFactory } from "../domain/services/AuthPayloadFactory";
-import { RegisterUserUseCase } from "./RegisterUser.usecase";
 import { LoginUserUseCase } from "./LoginUser.usecase";
+import { RegisterUserUseCase } from "./RegisterUser.usecase";
 import { InvalidCredentialsError } from "./errors/InvalidCredentialsError";
-import { User } from "../domain/User.entity";
-import { AuthToken } from "../domain/AuthToken.valueObject";
-import { Email } from "../domain/Email.valueObject";
 
 describe("LoginUserUseCase integration tests", () => {
   let prisma: PrismaClient;
@@ -88,5 +87,29 @@ describe("LoginUserUseCase integration tests", () => {
     await expect(loginUserUseCase.execute(command)).rejects.toThrow(
       InvalidCredentialsError,
     );
+  });
+
+  test("should return a user and token for valid credentials", async () => {
+    // Arrange
+    const command = {
+      email: TEST_USER_EMAIL,
+      clearPassword: TEST_USER_PASSWORD,
+    };
+
+    // Act
+    const result = await loginUserUseCase.execute(command);
+
+    // Assert (Existing)
+    expect(result).toBeDefined();
+    expect(result.user).toBeInstanceOf(User);
+    expect(result.token).toBeInstanceOf(AuthToken);
+    expect(result.user.email.value).toBe(TEST_USER_EMAIL);
+
+    const verifiedPayload = await authTokenService.verifyToken(result.token);
+
+    expect(verifiedPayload).not.toBeNull();
+    // We expect the payload from the token to match the user who just logged in
+    expect(verifiedPayload?.userEmail).toBe(result.user.email.value);
+    expect(verifiedPayload?.userId).toBe(result.user.id.id());
   });
 });

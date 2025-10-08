@@ -11,7 +11,7 @@ const LoginUserCommand = z.object({
     .string()
     .min(6, { message: "Password should be at least 6 characters" }),
 });
-type LoginUserCommand = z.infer<typeof LoginUserCommand>;
+export type LoginUserCommand = z.infer<typeof LoginUserCommand>;
 
 export class LoginUserUseCase {
   constructor(

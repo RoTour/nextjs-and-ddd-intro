@@ -3,6 +3,7 @@ import { Password } from "./Password.valueObject";
 import { UserId } from "./UserId.valueObject";
 import { DomainEventPublisher } from "../../shared-kernel/events/DomainEventPublisher";
 import { UserCreated } from "./UserCreated.event";
+import { AggregateRoot } from "@/shared-kernel/interfaces/AggregateRoot";
 
 export interface UserPrimitive {
   readonly id: string;
@@ -10,10 +11,10 @@ export interface UserPrimitive {
   readonly hashedPassword: string;
 }
 
-export class User {
+export class User implements AggregateRoot<UserId> {
   id: UserId;
   email: Email;
-  password: Password;
+  private password: Password;
 
   constructor(id: UserId, email: Email, password: Password) {
     this.id = id;
@@ -51,5 +52,9 @@ export class User {
     const password = Password.fromHashed(primitive.hashedPassword);
 
     return new User(id, email, password);
+  }
+
+  public toAuthPayload() {
+    return { email: this.email.value, id: this.id.id() };
   }
 }

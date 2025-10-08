@@ -13,6 +13,7 @@ const resetDb = async () => {
   await prisma.$transaction([
     prisma.grid.deleteMany(),
     prisma.player.deleteMany(),
+    prisma.authUser.deleteMany(),
   ]);
 };
 

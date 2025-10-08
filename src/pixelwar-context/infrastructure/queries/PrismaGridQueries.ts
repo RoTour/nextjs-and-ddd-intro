@@ -1,6 +1,6 @@
-import { IGridQueries } from "@/application/interfaces/IGridQueries";
-import { GridDto } from "@/application/queries/GridDto";
-import { PrismaClient } from "../../../generated/prisma";
+import { IGridQueries } from "@/pixelwar-context/application/interfaces/IGridQueries";
+import { GridDto } from "@/pixelwar-context/application/queries/GridDto";
+import { PrismaClient } from "../../../../generated/prisma";
 import { PrismaGridMapper } from "../repositories/PrismaGridRepository";
 
 export class PrismaGridQueries implements IGridQueries {

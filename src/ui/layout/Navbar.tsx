@@ -4,9 +4,9 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { logoutAction } from "@/app/auth/AuthServerActions.adapter";
 
-const Navbar = () => {
-  // On the server, check if the auth token cookie exists.
-  const token = cookies().get("pixelwar_auth_token");
+const Navbar = async () => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("pixelwar_auth_token");
 
   return (
     <nav className="flex bg-purple-900 items-center px-8 py-2 h-16 mb-2 text-white">
@@ -16,15 +16,16 @@ const Navbar = () => {
 
       <div className="ml-auto flex items-center gap-6">
         {token ? (
-          // If the user is logged in, show a Logout button.
-          // The button is in a form that calls our server action.
+          // If the token exists, the user is logged in.
+          // Render the Logout button.
           <form action={logoutAction}>
             <button type="submit" className="hover:underline">
               Logout
             </button>
           </form>
         ) : (
-          // If the user is logged out, show Login and Register links.
+          // If the token does not exist, the user is logged out.
+          // Render the Login and Register links.
           <>
             <Link href="/auth/login" className="hover:underline">
               Login

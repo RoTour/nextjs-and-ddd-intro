@@ -1,44 +1,52 @@
 # -----------------------------------------------------------------------------
-# This Dockerfile.bun is specifically configured for projects using Bun
-# For npm/pnpm or yarn, refer to the Dockerfile instead
+# This Dockerfile is configured for projects using pnpm with Node.js
 # -----------------------------------------------------------------------------
 
-# Use Bun's official image
-FROM oven/bun:1 AS base
-
+# Use a specific Node.js version for reproducibility
+FROM node:20-slim AS base
 WORKDIR /app
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Install OpenSSL for Prisma
 RUN apt-get update -y && apt-get install -y openssl
 
-# Install dependencies with bun
+# -----------------------------------------------------------------------------
+# DEPS STAGE: Install node_modules
+# -----------------------------------------------------------------------------
 FROM base AS deps
-COPY package.json ./
-COPY prisma ./prisma/
-RUN bun install --no-save
-RUN bun run prisma:generate
+# Copy only package manager files to leverage Docker cache
+COPY package.json pnpm-lock.yaml* ./
+# Using --frozen-lockfile is best practice for CI/CD to ensure the lockfile is used.
+RUN pnpm install --frozen-lockfile
 
-# Rebuild the source code only when needed
+# -----------------------------------------------------------------------------
+# BUILDER STAGE: Build the application
+# -----------------------------------------------------------------------------
 FROM base AS builder
 WORKDIR /app
+# Copy installed node_modules from the deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/generated ./generated
+# Copy the rest of the application source code
 COPY . .
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED=1
 
-# RUN bun prisma:generate
+# Run build steps
 ARG WEBSOCKET_URL
 ENV WEBSOCKET_URL=${WEBSOCKET_URL}
-RUN bun run build
+RUN pnpm run prisma:generate
+RUN pnpm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# -----------------------------------------------------------------------------
+# RUNNER STAGE: Run the production application
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED=1
 
 ENV NODE_ENV=production \
@@ -59,4 +67,5 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["bun", "./server.js"]
+# Run the server using Node.js
+CMD ["node", "server.js"]

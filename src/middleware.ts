@@ -1,8 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { JwtAuthTokenService } from "./auth-context/infrastructure/services/JwtAuthTokenService";
+import { auth } from "./lib/auth";
 
 const protectedRoutes = ["/"];
-const authRoutes = ["/auth/login", "/auth/register"];
+const authRoutes = [
+  "/auth/login",
+  "/auth/register",
+  "/better-auth/login",
+  "/better-auth/register",
+];
+export const runtime = "nodejs";
 
 export const middleware = async (req: NextRequest) => {
   console.debug("Middleware running for:", req.nextUrl.pathname);
@@ -12,7 +19,8 @@ export const middleware = async (req: NextRequest) => {
   );
 
   const payload = token ? await authTokenService.verifyToken(token) : null;
-  const isAuthenticated = !!payload;
+  const betterAuthSession = await auth.api.getSession({ headers: req.headers });
+  const isAuthenticated = !!payload || !!betterAuthSession;
 
   const { pathname } = req.nextUrl;
 
@@ -20,7 +28,11 @@ export const middleware = async (req: NextRequest) => {
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtectedRoute && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/auth/login", req.url));
+    console.debug("Redirecting to login from middleware", {
+      isProtectedRoute,
+      isAuthenticated,
+    });
+    return NextResponse.redirect(new URL("/better-auth/login", req.url));
   }
 
   if (isAuthRoute && isAuthenticated) {

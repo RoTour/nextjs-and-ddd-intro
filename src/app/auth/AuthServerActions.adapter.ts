@@ -11,8 +11,10 @@ import {
   LoginUserUseCase,
 } from "@/auth-context/application/LoginUser.usecase";
 import { InvalidCredentialsError } from "@/auth-context/application/errors/InvalidCredentialsError";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { unescape } from "querystring";
 
 const registerSchema = z.object({
   userEmail: z.email(),
@@ -150,7 +152,9 @@ export const AuthServerActionLogin = async (
 export const logoutAction = async () => {
   // Delete the cookie
   (await cookies()).delete("pixelwar_auth_token");
-
+  await auth.api.signOut({
+    headers: await headers(),
+  });
   // Redirect to the login page
-  redirect("/auth/login");
+  redirect("/better-auth/login");
 };
